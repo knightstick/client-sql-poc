@@ -51,6 +51,11 @@ export const deleteTodoFromDb = (title: string): void => {
   db.run('DELETE FROM todos WHERE title = ?', [title]);
 }
 
+export const updateTodoInDb = (oldTitle: string, newTitle: string): void => {
+  if (!db) throw new Error
+  db.run('UPDATE todos SET title = ? WHERE title = ?', [newTitle, oldTitle]);
+}
+
 export const saveDb = async (): Promise<void> => {
   if (!db) throw new Error('Database not initialized');
 
