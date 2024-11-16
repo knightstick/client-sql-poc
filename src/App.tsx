@@ -1,9 +1,9 @@
 import './App.css';
 
 import { useEffect, useRef, useState } from 'react';
-import { addTodoToDb, getTodosFromDb, initializeDb, saveDb } from './dbService';
+import { addTodoToDb, deleteTodoFromDb, getTodosFromDb, initializeDb, saveDb } from './dbService';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { addTodo, setTodos } from './store/todosSlice';
+import { addTodo, deleteTodo, setTodos } from './store/todosSlice';
 
 function App() {
   const todos = useAppSelector(state => state.todos.items)
@@ -46,6 +46,17 @@ function App() {
     }
   }
 
+  const handleDeleteTodo = async (taskToDelete: string) => {
+    try {
+      deleteTodoFromDb(taskToDelete);
+      dispatch(deleteTodo(taskToDelete));
+      await saveDb();
+    } catch (error) {
+      setError('Failed to delete task');
+      console.error(error);
+    }
+  }
+
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -66,7 +77,10 @@ function App() {
       <button onClick={handleAddTodo}>Add Task</button>
       <ul>
         {todos.map((todo, i) => (
-          <li key={i}>{todo}</li>
+          <li key={i}>
+            {todo}
+            <button onClick={() => handleDeleteTodo(todo)}>Delete</button>
+          </li>
         ))}
       </ul>
     </>
