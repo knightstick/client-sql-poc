@@ -76,6 +76,12 @@ function App() {
         type="text"
         value={newTodo}
         onChange={e => setNewTodo(e.target.value)}
+        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addTodo();
+          }
+        }}
         placeholder='Enter a new task' />
       <button onClick={addTodo}>Add Task</button>
       <ul>
