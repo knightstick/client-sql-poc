@@ -12,28 +12,60 @@ function App() {
   useEffect(() => {
     const loadDb = async () => {
       const SQL = await initSqlJs({ locateFile: () => sqlWasm });
-      const db = new SQL.Database();
+      let db: Database;
+
+      if ('storage' in navigator && 'getDirectory' in navigator.storage) {
+        console.log('Using persistent database');
+
+        const dirHandle = await navigator.storage.getDirectory();
+        const fileHandle = await dirHandle.getFileHandle('todos.db', { create: true });
+        const file = await fileHandle.getFile();
+        const arrayBuffer = await file.arrayBuffer();
+
+        if (arrayBuffer.byteLength > 0) {
+          console.log('Loading existing database');
+          db = new SQL.Database(new Uint8Array(arrayBuffer));
+        } else {
+          console.log('Creating new database');
+          db = new SQL.Database();
+        }
+      } else {
+        console.log('Fallback to in-memory database');
+        db = new SQL.Database();
+      }
+
       // Create a table
       db.run('CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT)');
       setDb(db);
-      loadTodos();
+      loadTodos(db);
     };
     loadDb();
   }, []);
 
-  const loadTodos = () => {
-    const res = db?.exec('SELECT title FROM todos');
-    if (res && res[0]) {
+  const loadTodos = (db: Database) => {
+    const res = db.exec('SELECT title FROM todos');
+    if (res[0]) {
       const titles = res[0].values.map(row => row[0] as string);
       setTodos(titles);
     }
   }
 
-  const addTodo = () => {
+  const saveDb = async (db: Database) => {
+    if ('storage' in navigator && 'getDirectory' in navigator.storage) {
+      const dirHandle = await navigator.storage.getDirectory();
+      const fileHandle = await dirHandle.getFileHandle('todos.db', { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(db.export());
+      await writable.close();
+    }
+  }
+
+  const addTodo = async () => {
     if (db && newTodo.trim() !== '') {
       db.run('INSERT INTO todos (title) VALUES (?)', [newTodo]);
       setTodos([...todos, newTodo]);
       setNewTodo('')
+      await saveDb(db);
     }
   }
 
