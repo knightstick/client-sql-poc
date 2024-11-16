@@ -2,12 +2,17 @@ import './App.css';
 
 import { useEffect, useRef, useState } from 'react';
 import { addTodoToDb, getTodosFromDb, initializeDb, saveDb } from './dbService';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { addTodo, setTodos } from './store/todosSlice';
 
 function App() {
-  const [todos, setTodos] = useState<string[]>([]);
+  const todos = useAppSelector(state => state.todos.items)
+  const dispatch = useAppDispatch();
+
   const [newTodo, setNewTodo] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -15,7 +20,7 @@ function App() {
       try {
         await initializeDb();
         const tasks = getTodosFromDb();
-        setTodos(tasks);
+        dispatch(setTodos(tasks));
         inputRef.current?.focus();
       } catch (error) {
         setError('Failed to load data');
@@ -25,13 +30,13 @@ function App() {
       }
     }
     loadData();
-  }, []);
+  }, [dispatch]);
 
   const handleAddTodo = async () => {
     if (newTodo.trim() !== '') {
       try {
         addTodoToDb(newTodo);
-        setTodos(prevTodos => [...prevTodos, newTodo]);
+        dispatch(addTodo(newTodo))
         setNewTodo('');
         await saveDb();
       } catch (error) {
