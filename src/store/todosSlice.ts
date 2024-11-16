@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Todo } from "../dbService";
 
 interface TodosState {
-  items: string[];
+  items: Todo[];
 }
 
 const initialState: TodosState = {
@@ -12,19 +13,19 @@ const todosSlice = createSlice({
   name: "todos",
   initialState,
   reducers: {
-    setTodos(state, action: PayloadAction<string[]>) {
+    setTodos(state, action: PayloadAction<Todo[]>) {
       state.items = action.payload;
     },
-    addTodo(state, action: PayloadAction<string>) {
+    addTodo(state, action: PayloadAction<Todo>) {
       state.items.push(action.payload);
     },
-    deleteTodo(state, action: PayloadAction<string>) {
-      state.items = state.items.filter(todo => todo !== action.payload);
+    deleteTodo(state, action: PayloadAction<number>) {
+      state.items = state.items.filter(todo => todo.id !== action.payload);
     },
-    updateTodo(state, action: PayloadAction<{ oldTask: string, newTask: string }>) {
-      const index = state.items.findIndex(todo => todo === action.payload.oldTask);
-      if (index !== -1) {
-        state.items[index] = action.payload.newTask;
+    updateTodo(state, action: PayloadAction<{ id: number, newTask: string }>) {
+      const todo = state.items.find(todo => todo.id === action.payload.id);
+      if (todo) {
+        todo.title = action.payload.newTask;
       }
     }
   },

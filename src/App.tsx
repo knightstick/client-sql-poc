@@ -20,14 +20,14 @@ function App() {
     const loadData = async () => {
       try {
         await initializeDb();
-        const tasks = getTodosFromDb();
-        dispatch(setTodos(tasks));
-        inputRef.current?.focus();
+        const todos = getTodosFromDb();
+        dispatch(setTodos(todos));
       } catch (error) {
         setError('Failed to load data');
         console.error(error);
       } finally {
         setLoading(false);
+        inputRef.current?.focus();
       }
     }
     loadData();
@@ -36,8 +36,8 @@ function App() {
   const handleAddTodo = async () => {
     if (newTodo.trim() !== '') {
       try {
-        addTodoToDb(newTodo);
-        dispatch(addTodo(newTodo))
+        const todo = addTodoToDb(newTodo);
+        dispatch(addTodo(todo))
         setNewTodo('');
         await saveDb();
       } catch (error) {

@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { deleteTodoFromDb, saveDb, updateTodoInDb } from "./dbService";
+import { deleteTodoFromDb, saveDb, Todo, updateTodoInDb } from "./dbService";
 import { useAppDispatch } from "./store/hooks";
 import { deleteTodo, updateTodo } from "./store/todosSlice";
 
 interface TodoItemProps {
-  task: string;
+  task: Todo;
 }
 
 function TodoItem({ task }: TodoItemProps) {
   const dispatch = useAppDispatch()
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTask, setEditedTask] = useState(task);
+  const [editedTitle, setEditedTitle] = useState(task.title);
 
   const handleDelete = async () => {
     try {
-      deleteTodoFromDb(task);
-      dispatch(deleteTodo(task));
+      deleteTodoFromDb(task.id);
+      dispatch(deleteTodo(task.id));
       await saveDb();
     } catch (error) {
       console.error(error);
@@ -27,18 +27,18 @@ function TodoItem({ task }: TodoItemProps) {
   }
 
   const handleCancelEdit = () => {
-    setEditedTask(task); // Reset the edited task to the original task
+    setEditedTitle(task.title); // Reset the edited task to the original task
     setIsEditing(false);
   }
 
   const handleSaveEdit = async () => {
-    if (editedTask.trim() === '') {
+    if (editedTitle.trim() === '') {
       alert("Todo cannot be empty");
       return
     }
     try {
-      updateTodoInDb(task, editedTask);
-      dispatch(updateTodo({ oldTask: task, newTask: editedTask }));
+      updateTodoInDb(task.id, editedTitle);
+      dispatch(updateTodo({ id: task.id, newTask: editedTitle }));
       await saveDb();
       setIsEditing(false);
     } catch (error) {
@@ -60,8 +60,8 @@ function TodoItem({ task }: TodoItemProps) {
         <>
           <input
             type="text"
-            value={editedTask}
-            onChange={e => setEditedTask(e.target.value)}
+            value={editedTitle}
+            onChange={e => setEditedTitle(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
           />
@@ -70,7 +70,7 @@ function TodoItem({ task }: TodoItemProps) {
         </>
       ) : (
         <>
-          <span>{task}</span>
+          <span>{task.title}</span>
           <button onClick={handleEdit}>Edit</button>
           <button onClick={handleDelete}>Delete</button>
         </>
